@@ -347,7 +347,7 @@ padding:8px 14px;
 border:none;
 border-radius:6px;
 cursor:pointer;
-background:#2563eb;
+background:#0b7a3b;
 color:white;
 }
 
@@ -524,4 +524,65 @@ border:none;
 padding:8px 16px;
 border-radius:6px;
 cursor:pointer;
+}
+/* diseno de aprobacion de eventos*/
+:root{
+  --verde-principal:#2e7d32;
+  --verde-hover:#1b5e20;
+  --verde-claro:#e8f5e9;
+
+  --amarillo:#f9a825;
+  --amarillo-hover:#f57f17;
+}
+.btn-primary{
+  background: var(--verde-principal);
+  border:none;
+  color:white;
+  padding:10px 18px;
+  border-radius:8px;
+  font-weight:500;
+  transition:0.2s;
+}
+
+.btn-primary:hover{
+  background:var(--verde-hover);
+}
+.btn-rechazar{
+  background:#e0b046;
+  color:white;
+  border:none;
+  padding:10px 18px;
+  border-radius:8px;
+}
+
+.btn-rechazar:hover{
+  background:#f57f17;
+}
+
+.estado{
+  background:#e8f5e9;
+  color:#2e7d32;
+
+  padding:6px 14px;
+
+  border-radius:20px;
+
+  font-size:13px;
+  font-weight:600;
+
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  width:auto;
+  height:auto;
+}
+.estado-pendiente{
+
+  background:#e8f5e9;
+
+  color:#2e7d32;
+
+  border:1px solid #c8e6c9;
+
 }

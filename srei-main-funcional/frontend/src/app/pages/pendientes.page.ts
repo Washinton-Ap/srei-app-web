@@ -35,7 +35,7 @@ import { ChangeDetectorRef } from '@angular/core';// para forzarlo que funcione 
             </a>
           </div>
         </div>
-        <span class="badge">{{e.estado}}</span>
+        <span class="estado estado-pendiente">{{e.estado}}</span>
       </div>
 
       <div style="margin-top:10px;">
@@ -48,7 +48,7 @@ import { ChangeDetectorRef } from '@angular/core';// para forzarlo que funcione 
           <span class="material-icons">check_circle</span>
           Aprobar
         </button>
-        <button type="button" class="btn btn-warn" (click)="decidir(e.id, 'RECHAZADO')">
+        <button type="button" class="btn btn-rechazar" (click)="decidir(e.id, 'RECHAZADO')">
           <span class="material-icons">cancel</span>
           Rechazar
         </button>
