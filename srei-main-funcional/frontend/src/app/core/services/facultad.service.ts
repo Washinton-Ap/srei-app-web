@@ -3,12 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
 export interface FacultadDto {
-  idfacultad: number;
+  id: number;
   nombre: string;
 }
 
 export interface CarreraDto {
-  idcarrera: number;
+  id: number;
   nombre: string;
   idfacultad: number;
 }

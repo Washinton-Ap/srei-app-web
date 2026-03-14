@@ -61,13 +61,13 @@ const MAPA_FACULTAD_CARRERAS: Record<string, string[]> = {
             <label>Carrera</label>
             <select
               class="input"
-              [(ngModel)]="carreraId"
+              [(ngModel)]="carreraSeleccionada"
               [disabled]="!facultadId || ambito !== 'CARRERA'"
-              (change)="on"
+              (change)="onCambiarCarrera()"
             >
               <option [ngValue]="null" disabled>Seleccione una carrera</option>
 
-              <option *ngFor="let c of carreras" [ngValue]="c.idcarrera">
+              <option *ngFor="let c of carreras" [ngValue]="c">
                 {{ c.nombre }}
               </option>
             </select>
@@ -126,6 +126,7 @@ export class DocenteProponerPage {
   facultadSeleccionada: FacultadDto | null = null;
 
   carreraId: number | null = null;
+  carreraSeleccionada: CarreraDto | null = null;
 
   imagen: File | null = null;
   informePdf: File | null = null;
@@ -186,7 +187,15 @@ export class DocenteProponerPage {
   }
 
   onCambiarCarrera(){
-    console.log('carrera:'+this.carreraId);
+    const carrera = this.carreraSeleccionada as any;
+    
+    console.log('Carrera:', this.carreraSeleccionada);
+    if (!carrera) return;
+
+    const id = carrera.id;
+    this.carreraId=id;
+
+    console.log('ID carrera:', id);
   }
 
   onImagen(ev: any) {
