@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { EventoService } from '../core/services/evento.service';
 import { CarreraDto, FacultadDto, FacultadService } from '../core/services/facultad.service';
 import { ChangeDetectorRef } from '@angular/core'; // para forzarlo que funcione con un solo click
+import { RouterLink } from '@angular/router';
 
 const MAPA_FACULTAD_CARRERAS: Record<string, string[]> = {
   'Ciencias de la Computación': ['Software', 'Telemática', 'Sistemas'],
@@ -12,7 +13,7 @@ const MAPA_FACULTAD_CARRERAS: Record<string, string[]> = {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,RouterLink],
   template: `
     <div class="card">
       <h2 style="margin:0;">Proponer evento</h2>
@@ -45,13 +46,10 @@ const MAPA_FACULTAD_CARRERAS: Record<string, string[]> = {
           </div>
           <div>
             <label>Facultad</label>
-            <select
-              class="input"
-              [(ngModel)]="facultadId"
-              (ngModelChange)="onCambiarFacultad($event)"
-            >
+            <select class="input" [(ngModel)]="facultadSeleccionada" (change)="onCambiarFacultad()">
               <option [ngValue]="null" disabled>Seleccione una facultad</option>
-              <option *ngFor="let f of facultades" [ngValue]="f.idfacultad">
+
+              <option *ngFor="let f of facultades" [ngValue]="f">
                 {{ f.nombre }}
               </option>
             </select>
@@ -65,12 +63,15 @@ const MAPA_FACULTAD_CARRERAS: Record<string, string[]> = {
               class="input"
               [(ngModel)]="carreraId"
               [disabled]="!facultadId || ambito !== 'CARRERA'"
+              (change)="on"
             >
               <option [ngValue]="null" disabled>Seleccione una carrera</option>
+
               <option *ngFor="let c of carreras" [ngValue]="c.idcarrera">
                 {{ c.nombre }}
               </option>
             </select>
+
             <div
               style="font-size:12px; color:#6b7280; margin-top:6px;"
               *ngIf="ambito === 'FACULTAD'"
@@ -115,19 +116,20 @@ export class DocenteProponerPage {
   descripcion = '';
   fecha = '';
   lugar = '';
+
   ambito: 'FACULTAD' | 'CARRERA' = 'FACULTAD';
 
   facultades: FacultadDto[] = [];
   carreras: CarreraDto[] = [];
 
   facultadId: number | null = null;
-  carreraId: number | null = null;
+  facultadSeleccionada: FacultadDto | null = null;
 
-  facultad = '';
-  carrera = '';
+  carreraId: number | null = null;
 
   imagen: File | null = null;
   informePdf: File | null = null;
+
   mensaje = '';
   error = '';
 
@@ -139,34 +141,52 @@ export class DocenteProponerPage {
 
   ngOnInit() {
     // preselección opcional
-    this.onCambiarAmbito(this.ambito);
-
+    //this.onCambiarAmbito(this.ambito);
     this.facultadService.facultades().subscribe({
       next: (data) => {
         this.facultades = data;
         this.cd.detectChanges(); // fuerza actualización de la vista
+      },
+      error: () => {
+        this.error = 'No se pudieron cargar las facultades';
       },
     });
   }
 
   onCambiarAmbito(valor: 'FACULTAD' | 'CARRERA') {
     this.ambito = valor;
-    // si cambia a FACULTAD, no obligar carrera
-    if (this.ambito === 'FACULTAD') {
-      this.carrera = '';
+
+    if (valor === 'FACULTAD') {
+      this.carreraId = null;
     }
   }
 
-  onCambiarFacultad(idfacultad: number) {
-    this.facultadId = idfacultad;
-    this.carreraId = null;
+  onCambiarFacultad() {
+    const facultad = this.facultadSeleccionada as any;
+    
+    console.log('facultad:', this.facultadSeleccionada);
+    if (!facultad) return;
 
-    this.facultadService.carrerasPorFacultad(idfacultad).subscribe({
+    const id = facultad.id;
+    this.facultadId=id;
+
+    console.log('ID facultad:', id);
+
+    this.facultadService.carrerasPorFacultad(id).subscribe({
       next: (data) => {
+        console.log('carreras:', data);
         this.carreras = data;
-        console.log('Carreras:', data);
+         this.cd.detectChanges(); // fuerza actualización de la vista
+      },
+      error: (e) => {
+        this.error = 'No se pudieron cargar las carreras';
+        console.log('error:', e);
       },
     });
+  }
+
+  onCambiarCarrera(){
+    console.log('carrera:'+this.carreraId);
   }
 
   onImagen(ev: any) {
@@ -203,31 +223,28 @@ export class DocenteProponerPage {
     this.mensaje = '';
     this.error = '';
 
-    const roles = JSON.parse(localStorage.getItem('roles') || '[]');
-    if (!roles.includes('DOCENTE')) {
-      this.error = 'Solo un usuario con rol DOCENTE puede proponer eventos.';
-      return;
-    }
-
     if (!this.titulo.trim()) {
-      this.error = 'Debe ingresar el título.';
-      return;
-    }
-    if (!this.fecha) {
-      this.error = 'Debe seleccionar la fecha.';
-      return;
-    }
-    if (!this.lugar.trim()) {
-      this.error = 'Debe ingresar el lugar.';
-      return;
-    }
-    if (!this.facultad) {
-      this.error = 'Debe seleccionar la facultad.';
+      this.error = 'Debe ingresar el título';
       return;
     }
 
-    if (this.ambito === 'CARRERA' && !this.carrera) {
-      this.error = 'Debe seleccionar la carrera.';
+    if (!this.fecha) {
+      this.error = 'Debe seleccionar la fecha';
+      return;
+    }
+
+    if (!this.lugar.trim()) {
+      this.error = 'Debe ingresar el lugar';
+      return;
+    }
+
+    if (!this.facultadId) {
+      this.error = 'Debe seleccionar una facultad';
+      return;
+    }
+
+    if (this.ambito === 'CARRERA' && !this.carreraId) {
+      this.error = 'Debe seleccionar una carrera';
       return;
     }
 
@@ -238,30 +255,33 @@ export class DocenteProponerPage {
         fecha: this.fecha,
         lugar: this.lugar,
         ambito: this.ambito,
+
         facultad: String(this.facultadId),
         carrera: this.carreraId ? String(this.carreraId) : undefined,
+
         imagen: this.imagen,
         informePdf: this.informePdf,
       })
       .subscribe({
         next: (e) => {
-          this.mensaje = 'Evento registrado. Estado: ' + e.estado;
-          this.titulo = this.descripcion = this.fecha = this.lugar = '';
-          this.facultad = '';
-          this.carrera = '';
+          this.mensaje = 'Evento enviado correctamente';
+
+          this.titulo = '';
+          this.descripcion = '';
+          this.fecha = '';
+          this.lugar = '';
+
+          this.facultadId = null;
+          this.carreraId = null;
+
           this.carreras = [];
-          this.imagen = this.informePdf = null;
+
+          this.imagen = null;
+          this.informePdf = null;
         },
-        error: (e) => {
-          if (e?.status === 0) {
-            this.error =
-              'No se pudo conectar con el servidor. Verifica que el backend esté en http://localhost:8080.';
-            return;
-          }
-          const msg = e?.error?.message || e?.error?.error || e?.message;
-          this.error = msg
-            ? String(msg)
-            : `No se pudo registrar el evento (HTTP ${e?.status || '???'}).`;
+
+        error: () => {
+          this.error = 'No se pudo registrar el evento';
         },
       });
   }

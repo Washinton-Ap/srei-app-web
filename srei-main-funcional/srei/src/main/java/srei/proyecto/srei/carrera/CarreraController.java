@@ -19,7 +19,7 @@ public class CarreraController {
     }
 
     @GetMapping("/{facultadId}")
-    public List<Carrera> listar(@RequestParam Long facultadId) {
+    public List<Carrera> listar(@PathVariable Long facultadId) {
         return carreraService.listarPorFacultad(facultadId);
     }
 }

@@ -24,8 +24,8 @@ facultades() {
 }
 
 carrerasPorFacultad(facultadId: number) {
-  console.log("idfacultad: "+facultadId);
-  return this.http.get<CarreraDto[]>(this.apiUrl + '/carreras?facultadId=' + facultadId);
+  console.log("service: "+facultadId);
+  return this.http.get<CarreraDto[]>(this.apiUrl + '/carreras/'+facultadId);
 }
 
 }

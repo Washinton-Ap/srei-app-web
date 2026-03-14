@@ -38,7 +38,7 @@ import * as XLSX from 'xlsx';
       <div class="filtros">
         <div class="campo">
           <select (change)="generarReporte($any($event.target).value)">
-            <option value="">Seleccione un reporte</option>
+            <option value="" >Seleccione un reporte</option>
 
             <option *ngFor="let r of reportesDisponibles" [value]="r.codigo">
               {{ r.nombre }}

@@ -19,15 +19,12 @@ export const routes: Routes = [
 
   { path: 'login', component: LoginPage },
   { path: 'register', component: RegisterPage },
-        { path: 'eventos/:id', component: EventoDetallePage },
-        
+
   {
     path: 'dashboard',
     component: DashboardShell,
     canActivate: [authGuard],
     children: [
-      { path: '', component: DashboardHome },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'usuarios',
         component: AdminUsuariosPage,
@@ -67,6 +64,9 @@ export const routes: Routes = [
 
       { path: 'eventos', component: EventosPage },
 
+      { path: 'eventosDetalle/:id', component: EventoDetallePage },
+      { path: '', component: DashboardHome },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },
 

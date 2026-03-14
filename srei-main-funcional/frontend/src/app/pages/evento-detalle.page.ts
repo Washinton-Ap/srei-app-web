@@ -7,12 +7,14 @@ import { EventoService, EventoDto } from '../core/services/evento.service';
 import { ComentarioService, ComentarioDto } from '../core/services/comentario.service';
 import { AsistenciaService, QrDto } from '../core/services/asistencia.service';
 import { TriviaService, PreguntaDto, RankingItemDto } from '../core/services/trivia.service';
+import { ChangeDetectorRef } from '@angular/core';// para forzarlo que funcione con un solo click
+import { RouterLink } from '@angular/router';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, TopbarComponent],
+  imports: [CommonModule,RouterLink,FormsModule],
   template: `
-  <app-topbar />
+  <!--<app-topbar />-->
   <div class="container">
 
     <div class="card" *ngIf="cargando">
@@ -45,7 +47,10 @@ import { TriviaService, PreguntaDto, RankingItemDto } from '../core/services/tri
 
           <div *ngIf="imagenPublicaUrl" style="margin-top:12px;">
             <div style="font-weight:700; margin-bottom:8px;">Imagen del evento</div>
-            <img [src]="imagenPublicaUrl" style="max-width:100%; border-radius:14px; border:1px solid var(--borde);" />
+            <img 
+            class="evento-img"
+            [src]="imagenPublicaUrl?imagenPublicaUrl: '/uteq.png'"
+                      (error)="onImgError($event)" style="max-width:100%; border-radius:14px; border:1px solid var(--borde);" />
           </div>
         </div>
         <div style="display:flex; flex-direction:column; gap:10px;">
@@ -53,7 +58,9 @@ import { TriviaService, PreguntaDto, RankingItemDto } from '../core/services/tri
             <span class="material-icons">picture_as_pdf</span>
             Ver informe PDF
           </button>
-          <a *ngIf="imagenPublicaUrl" class="btn" [href]="imagenPublicaUrl" target="_blank">
+          
+          <a *ngIf="imagenPublicaUrl" class="btn" [href]="imagenPublicaUrl?imagenPublicaUrl: '/uteq.png'"
+                      (error)="onImgError($event)" target="_blank">
             <span class="material-icons">image</span>
             Ver imagen
           </a>
@@ -183,7 +190,7 @@ export class EventoDetallePage {
     private eventoService: EventoService,
     private comentarioService: ComentarioService,
     private asistenciaService: AsistenciaService,
-    private triviaService: TriviaService
+    private triviaService: TriviaService,private cd: ChangeDetectorRef
   ) {
     const roles = JSON.parse(localStorage.getItem('roles') || '[]');
     this.esAdmin = roles.includes('ADMIN');
@@ -193,6 +200,7 @@ export class EventoDetallePage {
 
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.cargarDetalle(id);
+ 
   }
 
   private cargarDetalle(id: number) {
@@ -204,8 +212,12 @@ export class EventoDetallePage {
         this.cargando = false;
         // Imagen: se sirve pública desde /uploads/**
         this.imagenPublicaUrl = e?.rutaImagen ? this.apiFileUrl(e.rutaImagen) : '';
-        this.cargarComentarios();
-        this.cargarRanking();
+        
+        this.cd.detectChanges(); // fuerza actualización de la vista
+           
+    this.cargarComentarios();
+    this.cargarRanking();
+
       },
       error: (err) => {
         this.cargando = false;
@@ -217,8 +229,14 @@ export class EventoDetallePage {
 
   cargarComentarios() {
     if (!this.evento) return;
-    this.comentarioService.listar(this.evento.id).subscribe({ next: (c) => (this.comentarios = c || []) });
-  }
+    this.comentarioService.listar(this.evento.id).subscribe({
+    next: (c) => {
+       this.comentarios = c || [];
+        this.cargando = false;
+        // Imagen: se sirve pública desde /uploads/**
+        this.cd.detectChanges();
+  }});
+}
 
   publicarComentario() {
     if (!this.evento) return;
@@ -226,12 +244,16 @@ export class EventoDetallePage {
       next: () => {
         this.nuevoComentario = '';
         this.cargarComentarios();
+         this.cd.detectChanges();
       }
     });
   }
 
   censurar(c: ComentarioDto) {
-    this.comentarioService.censurar(c.id, !c.censurado).subscribe({ next: () => this.cargarComentarios() });
+    this.comentarioService.censurar(c.id, !c.censurado).subscribe({ next: () => this.cargarComentarios()
+
+
+    });
   }
 
   asistir() {
@@ -274,6 +296,7 @@ export class EventoDetallePage {
   cargarRanking() {
     if (!this.evento) return;
     this.triviaService.ranking(this.evento.id).subscribe({ next: (r) => (this.ranking = r || []) });
+    this.cd.detectChanges(); // fuerza actualización de la vista
   }
 
   abrirInforme() {
@@ -298,4 +321,9 @@ export class EventoDetallePage {
     const p = path.startsWith('/') ? path.slice(1) : path;
     return 'http://localhost:8080/' + p;
   }
+
+    onImgError(event: any) {
+    event.target.src = '/uteq.png';
+  }
+
 }
