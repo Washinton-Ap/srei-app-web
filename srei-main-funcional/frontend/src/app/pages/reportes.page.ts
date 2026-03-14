@@ -11,6 +11,8 @@ import { IonicModule } from '@ionic/angular';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { ChangeDetectorRef } from '@angular/core';// para forzarlo que funcione con un solo click
+
 
 @Component({
   standalone: true,
@@ -184,7 +186,7 @@ export class ReportesPage implements OnInit {
     ],
   };
 
-  constructor(private reporteService: ReporteService) {}
+  constructor(private reporteService: ReporteService,private cd: ChangeDetectorRef) {}
 
   ngOnInit() {
     const roles = JSON.parse(localStorage.getItem('roles') || '[]');
@@ -218,6 +220,7 @@ export class ReportesPage implements OnInit {
       next: (d) => (this.resumen = d),
       error: (e) => (this.error = e?.error?.message || 'No se pudo generar resumen'),
     });
+    this.cd.detectChanges(); // fuerza actualización de la vista
   }
 
   generarReporte(tipo: string) {
@@ -226,8 +229,11 @@ export class ReportesPage implements OnInit {
 
     this.reporteService.obtenerReporte(tipo).subscribe({
       next: (data) => {
+        
         this.reportesOriginal = data;
         this.reportes = data;
+        console.log('resporte: '+this.reportes.toString());
+        this.cd.detectChanges(); // fuerza actualización de la vista
       },
 
       error: (e) => {
@@ -235,6 +241,7 @@ export class ReportesPage implements OnInit {
       },
     });
     setTimeout(() => this.crearGrafico(), 100);
+    this.cd.detectChanges(); // fuerza actualización de la vista
   }
   /*
   exportarPDF() {
@@ -314,6 +321,7 @@ export class ReportesPage implements OnInit {
         },
       },
     });
+    
   }
   filtrar() {
     this.reportes = this.reportesOriginal.filter((r) => {

@@ -193,4 +193,7 @@ public class EventoController {
             throw new IllegalArgumentException("No se pudo generar plantilla");
         }
     }
+
+    
+
 }
