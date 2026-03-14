@@ -64,7 +64,7 @@ export const routes: Routes = [
 
       { path: 'eventos', component: EventosPage },
 
-      { path: 'eventosDetalle/:id', component: EventoDetallePage },
+      { path: 'eventos/:id', component: EventoDetallePage },
       { path: '', component: DashboardHome },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],

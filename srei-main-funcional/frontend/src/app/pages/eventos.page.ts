@@ -97,7 +97,7 @@ import { ChangeDetectorRef } from '@angular/core';// para forzarlo que funcione 
             </p>
 
             <div class="evento-actions">
-              <button class="btn-asistir" [routerLink]="['/eventos', e.id]">Asistir</button>
+              <button class="btn-asistir" [routerLink]="['/dashboard/eventos', e.id]">Abrir</button>
             </div>
           </div>
         </div>
