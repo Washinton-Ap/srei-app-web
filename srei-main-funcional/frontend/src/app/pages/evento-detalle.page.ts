@@ -12,7 +12,7 @@ import { RouterLink } from '@angular/router';
 
 @Component({
   standalone: true,
-  imports: [CommonModule,RouterLink,FormsModule],
+  imports: [CommonModule,FormsModule],
   template: `
   <!--<app-topbar />-->
   <div class="container">
@@ -54,21 +54,26 @@ import { RouterLink } from '@angular/router';
           </div>
         </div>
         <div style="display:flex; flex-direction:column; gap:10px;">
-          <button type="button" *ngIf="evento.rutaInformePdf && (esDecano || esCoordinador || esAdmin)" class="btn" (click)="abrirInforme()">
+         <!-- <button type="button"  *ngIf="evento.rutaInformePdf && (esDecano || esCoordinador || esAdmin)" class="btn btn-oscuro"  (click)="abrirInforme()">
             <span class="material-icons">picture_as_pdf</span>
             Ver informe PDF
-          </button>
+          </button> -->
+          <a class="btn btn-oscuro" *ngIf="evento.rutaInformePdf && (esDecano || esCoordinador || esAdmin)"  [href]="imagenPublicaUrl? this.apiFileUrl(evento.rutaInformePdf): '/uteq.png'"
+                      (error)="onImgError($event)" target="_blank">
+            <span class="material-icons">picture_as_pdf</span>
+             Ver informe PDF
+          </a>
           
-          <a *ngIf="imagenPublicaUrl" class="btn" [href]="imagenPublicaUrl?imagenPublicaUrl: '/uteq.png'"
+          <a *ngIf="imagenPublicaUrl" class="btn btn-naranja" [href]="imagenPublicaUrl?imagenPublicaUrl: '/uteq.png'"
                       (error)="onImgError($event)" target="_blank">
             <span class="material-icons">image</span>
             Ver imagen
           </a>
-          <button type="button" class="btn btn-primary" (click)="asistir()" [disabled]="evento.estado !== 'APROBADO'">
+          <button type="button" class="btn btn-naranja" (click)="asistir()" [disabled]="evento.estado !== 'APROBADO'">
             <span class="material-icons">qr_code</span>
             Asistir (QR)
           </button>
-          <button type="button" class="btn" (click)="cargarTrivia()">
+          <button type="button" class="btn btn-naranja" (click)="cargarTrivia()">
             <span class="material-icons">quiz</span>
             Trivia
           </button>
@@ -85,11 +90,11 @@ import { RouterLink } from '@angular/router';
           </div>
 
           <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-            <button type="button" class="btn btn-primary" (click)="confirmarAsistencia()">
+            <button type="button" class="btn btn-verde" (click)="confirmarAsistencia()">
               <span class="material-icons">done</span>
               Confirmar asistencia
             </button>
-            <a class="btn" [href]="'http://localhost:8080/api/asistencias/confirmar?token=' + qr.token" target="_blank">
+            <a class="btn btn-verde" [href]="'http://localhost:8080/api/asistencias/confirmar?token=' + qr.token" target="_blank">
               <span class="material-icons">open_in_new</span>
               Abrir confirmación
             </a>
@@ -111,7 +116,7 @@ import { RouterLink } from '@angular/router';
         <div class="card">
           <div style="font-weight:700; margin-bottom:10px;">Comentarios</div>
           <textarea class="input" style="min-height:90px;" [(ngModel)]="nuevoComentario" placeholder="Escribe un comentario..."></textarea>
-          <button class="btn btn-primary" style="margin-top:10px;" (click)="publicarComentario()">
+          <button class="btn btn-verde" style="margin-top:10px;" (click)="publicarComentario()">
             <span class="material-icons">send</span>
             Publicar
           </button>
@@ -319,7 +324,7 @@ export class EventoDetallePage {
     // backend guarda rutas tipo uploads/archivo.png, servido en /uploads/**
     // normalizamos para que siempre inicie con /uploads/
     const p = path.startsWith('/') ? path.slice(1) : path;
-    return 'http://localhost:8080/' + p;
+    return 'https://www.lexusinformatics.com/Sistema_Eventos/' + p;
   }
 
     onImgError(event: any) {

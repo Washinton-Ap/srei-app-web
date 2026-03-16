@@ -59,7 +59,7 @@ export const routes: Routes = [
         path: 'reportes',
         component: ReportesPage,
         canActivate: [roleGuard],
-        data: { roles: ['DECANO', 'COORDINADOR', 'ADMIN', 'DOCENTE'] },
+        data: { roles: ['DECANO', 'COORDINADOR', 'ADMIN', 'DOCENTE','ASISTENTE'] },
       },
 
       { path: 'eventos', component: EventosPage },

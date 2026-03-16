@@ -13,6 +13,7 @@ import srei.proyecto.srei.usuario.RolNombre;
 import srei.proyecto.srei.usuario.Usuario;
 
 import java.time.LocalDate;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -47,9 +48,17 @@ public class EventoService {
             throw new IllegalArgumentException("Debe indicar carrera");
         }
 
-        String rutaImg = fileStorageService.guardar(imagen, "evento_img");
-        String rutaPdf = fileStorageService.guardar(informePdf, "evento_informe");
+        String rutaImg = null;
+        String rutaPdf= null;
+        try {
+            rutaImg = fileStorageService.subirArchivo(imagen, "evento_img");
+            rutaPdf = fileStorageService.subirArchivo(informePdf, "evento_informe");
 
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+       
         Evento e = Evento.builder()
                 .titulo(titulo)
                 .descripcion(descripcion)

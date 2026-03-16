@@ -9,6 +9,7 @@ export interface ReporteEventoDto {
   confirmados: number;
   comentariosVisibles: number;
   impacto: number;
+  [key: string]: any;
 }
 
 export interface SerieDto {
@@ -23,6 +24,7 @@ export interface ReporteResumenDto {
   confirmados: number;
   comentarios: number;
   series: SerieDto[];
+  [key: string]: any;
 }
 
 @Injectable({ providedIn: 'root' })
