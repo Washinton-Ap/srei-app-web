@@ -6,6 +6,8 @@ import srei.proyecto.srei.usuario.Usuario;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "eventos")
@@ -23,7 +25,7 @@ public class Evento {
     private String descripcion;
 
     @Column(nullable = false)
-    private LocalDate fecha;
+    private LocalDateTime fecha;
 
     @Column(nullable = false, length = 200)
     private String lugar;
@@ -31,6 +33,7 @@ public class Evento {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private AmbitoEvento ambito;
+
 
     @Column(length = 120)
     private String facultad; // requerido si ambito=FACULTAD

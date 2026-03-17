@@ -9,6 +9,7 @@ export interface EventoDto {
   fecha: string;
   lugar: string;
   ambito: 'FACULTAD' | 'CARRERA';
+  hora: string;
   facultad?: string;
   carrera?: string;
   estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
@@ -53,6 +54,7 @@ export class EventoService {
     fecha: string;
     lugar: string;
     ambito: 'FACULTAD' | 'CARRERA';
+    hora: string;
     facultad?: string;
     carrera?: string;
     imagen?: File | null;
@@ -64,6 +66,7 @@ export class EventoService {
     fd.append('fecha', form.fecha);
     fd.append('lugar', form.lugar);
     fd.append('ambito', form.ambito);
+     fd.append('hora', form.hora);
     if (form.facultad) fd.append('facultad', form.facultad);
     if (form.carrera) fd.append('carrera', form.carrera);
     if (form.imagen) fd.append('imagen', form.imagen);
@@ -85,6 +88,7 @@ export class EventoService {
       fecha: string;
       lugar: string;
       ambito: 'FACULTAD' | 'CARRERA';
+      hora:string;
       facultad?: string;
       carrera?: string;
       imagen?: File | null;
@@ -109,6 +113,6 @@ export class EventoService {
   }
 
   generarImagenIA(prompt: string) {
-    return this.http.post('/api/ia/generar-imagen', { prompt });
+    return this.http.post(this.apiUrl+'/ia/generar-imagen', { prompt });
   }
 }
