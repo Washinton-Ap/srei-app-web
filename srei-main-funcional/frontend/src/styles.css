@@ -200,14 +200,17 @@ a {
   pendiente */
 
 .badge_proponer {
-  padding: 4px 10px;
-  border-radius: 360px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
+  
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #060400;
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
 .badge-pendiente {

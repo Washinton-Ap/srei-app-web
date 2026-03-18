@@ -160,7 +160,7 @@ export class ReportesPage implements OnInit {
     ASISTENTE: [
       { nombre: 'Eventos asistidos', codigo: 'eventos_asistidos' },
       { nombre: 'Eventos comentados', codigo: 'eventos_comentados' },
-      { nombre: 'Reporte de trivia', codigo: 'trivia' },
+      //{ nombre: 'Reporte de trivia', codigo: 'trivia' },
     ],
 
     DOCENTE: [

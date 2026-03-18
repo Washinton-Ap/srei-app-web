@@ -4,10 +4,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import srei.proyecto.srei.reporte.dto.ComentarioAutorDto;
+import srei.proyecto.srei.reporte.dto.ComentarioCensuradoDto;
+import srei.proyecto.srei.reporte.dto.EventoAsistenciaDto;
 import srei.proyecto.srei.reporte.dto.ReporteEventoDto;
 import srei.proyecto.srei.reporte.dto.ReporteFacultadCarreraDto;
 import srei.proyecto.srei.reporte.dto.ReporteFacultadCarreraDtoevento;
+import srei.proyecto.srei.reporte.dto.ReporteFacultadEventoDto;
 import srei.proyecto.srei.reporte.dto.ReporteResumenDto;
+import srei.proyecto.srei.reporte.dto.UsuarioRolDto;
 
 import java.util.List;
 
@@ -71,6 +77,35 @@ public class ReporteController {
     @PreAuthorize("hasRole('COORDINADOR')")
     public ResponseEntity<List<ReporteFacultadCarreraDtoevento>> carreras_eventosCoordinador() {
         return ResponseEntity.ok(reporteService.carreras_eventosCoordinadorReporte());
+    }
+
+     @GetMapping("/facultades_eventos")
+    @PreAuthorize("hasRole('COORDINADOR')")
+    public ResponseEntity<List<ReporteFacultadEventoDto>> facultad_eventosCoordinador() {
+        return ResponseEntity.ok(reporteService.facultad_eventosCoordinadorReporte());
+    }
+
+    @GetMapping("/usuarios")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UsuarioRolDto>> usuariosListar() {
+        return ResponseEntity.ok(reporteService.usuariosListarReporte());
+    }
+
+    @GetMapping("/comentarios_censurados")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ComentarioCensuradoDto>> comentarios_censuraListar() {
+        return ResponseEntity.ok(reporteService.comentarios_ListarReporte());
+    }
+    /*ASISTENTE*/
+    @GetMapping("/eventos_asistidos")
+    @PreAuthorize("hasRole('ASISTENTE')")
+    public ResponseEntity<List<EventoAsistenciaDto>> EventoAsistenciaDtoListar(@PathVariable Long id) {
+        return ResponseEntity.ok(reporteService.EventoAsistenciaDtoListarReporte(id));
+    }
+    @GetMapping("/eventos_comentados")
+    @PreAuthorize("hasRole('ASISTENTE')")
+    public ResponseEntity<List<ComentarioAutorDto>> eventos_comentadosDtoListar(@PathVariable Long id) {
+        return ResponseEntity.ok(reporteService.eventos_comentadosDtoListarReporte(id));
     }
 
 }

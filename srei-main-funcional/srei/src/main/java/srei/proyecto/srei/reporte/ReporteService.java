@@ -2,17 +2,25 @@ package srei.proyecto.srei.reporte;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
+
 import srei.proyecto.srei.asistencia.AsistenciaRepository;
 import srei.proyecto.srei.comentario.ComentarioRepository;
 import srei.proyecto.srei.common.util.UsuarioActualService;
 import srei.proyecto.srei.evento.*;
+import srei.proyecto.srei.reporte.dto.ComentarioAutorDto;
+import srei.proyecto.srei.reporte.dto.ComentarioCensuradoDto;
+import srei.proyecto.srei.reporte.dto.EventoAsistenciaDto;
 import srei.proyecto.srei.reporte.dto.ReporteEventoDto;
 import srei.proyecto.srei.reporte.dto.ReporteFacultadCarreraDto;
 import srei.proyecto.srei.reporte.dto.ReporteFacultadCarreraDtoevento;
+import srei.proyecto.srei.reporte.dto.ReporteFacultadEventoDto;
 import srei.proyecto.srei.reporte.dto.ReporteResumenDto;
 import srei.proyecto.srei.reporte.dto.SerieDto;
+import srei.proyecto.srei.reporte.dto.UsuarioRolDto;
 import srei.proyecto.srei.usuario.RolNombre;
 
 import java.time.YearMonth;
@@ -20,6 +28,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +40,84 @@ public class ReporteService {
     private final UsuarioActualService usuarioActualService;
 
 
-/*nicio victor */
+/*nicio  */
+
+public List<ComentarioAutorDto> eventos_comentadosDtoListarReporte( @Param("asistenteId") Long asistenteId)  {
+var coord = usuarioActualService.obtener();
+boolean ok = coord.getRoles().stream()
+        .anyMatch(r -> RolNombre.ADMIN.equals(r.getNombre()));
+    if (!ok) throw new IllegalArgumentException("No autorizado");
+    List<ComentarioAutorDto> reporte = eventoRepository.comentariosPorAutor(asistenteId);
+    reporte.forEach(r -> 
+        System.out.println("titulo: " + r.gettitulo() +
+                           ",contenido: " + r.getcontenido() +
+                           ",apellido: " + r.getapellidos() +
+                           ",nombre: " + r.getnombres()
+                        ));
+    return reporte;
+    }
+
+public List<EventoAsistenciaDto> EventoAsistenciaDtoListarReporte( @Param("asistenteId") Long asistenteId)  {
+var coord = usuarioActualService.obtener();
+boolean ok = coord.getRoles().stream()
+        .anyMatch(r -> RolNombre.ADMIN.equals(r.getNombre()));
+    if (!ok) throw new IllegalArgumentException("No autorizado");
+    List<EventoAsistenciaDto> reporte = eventoRepository.reporteEventosAsistidos(asistenteId);
+    reporte.forEach(r -> 
+        System.out.println("titulo: " + r.gettitulo() +
+                           ",FACULTAD: " + r.getfacultad() +
+                           ",CARRERA: " + r.getcarrera() +
+                           ",TOTAL: " + r.gettotal()
+                        ));
+    return reporte;
+    }
+public List<ComentarioCensuradoDto> comentarios_ListarReporte()  {
+var coord = usuarioActualService.obtener();
+boolean ok = coord.getRoles().stream()
+        .anyMatch(r -> RolNombre.ADMIN.equals(r.getNombre()));
+    if (!ok) throw new IllegalArgumentException("No autorizado");
+    List<ComentarioCensuradoDto> reporte = eventoRepository.listarComentariosCensurados();
+    reporte.forEach(r -> 
+        System.out.println("titulo: " + r.gettitulo() +
+                           ",contenido: " + r.getcontenido() +
+                           ",creadoEn: " + r.getcreadoEn() +
+                           ",apellidos: " + r.getapellidos() +
+                           ",nombres: " + r.getnombres()
+                        ));
+    return reporte;
+    }
+public List<UsuarioRolDto> usuariosListarReporte()  {
+
+    var coord = usuarioActualService.obtener();
+
+boolean ok = coord.getRoles().stream()
+        .anyMatch(r -> RolNombre.ADMIN.equals(r.getNombre()));
+    if (!ok) throw new IllegalArgumentException("No autorizado");
+    List<UsuarioRolDto> reporte = eventoRepository.listarUsuariosConRol();
+
+    reporte.forEach(r -> 
+        System.out.println("apellidos: " + r.getapellidos() +
+                           ",nombres: " + r.getnombres() +
+                           ",rol: " + r.getrol() +
+                           ",fecha: " + r.getcreadoEn() +
+                           ",habilitado: " + r.gethabilitado()
+                        ));
+    return reporte;
+    }
+
+public List<ReporteFacultadEventoDto> facultad_eventosCoordinadorReporte()  {
+  List<ReporteFacultadEventoDto> reporte = eventoRepository.obtenerReporteFacultadPorEvento();
+
+    // Imprime cada registro en consola
+    reporte.forEach(r -> 
+        System.out.println(", Carrera: " + r.getfacultad() +
+                           ", Total: " + r.getTotal())
+    );
+
+    return reporte;
+    }
+
+
 public List<ReporteFacultadCarreraDtoevento> carreras_eventosCoordinadorReporte()  {
   List<ReporteFacultadCarreraDtoevento> reporte = eventoRepository.obtenerReporteFacultadCarreraPorEvento();
 

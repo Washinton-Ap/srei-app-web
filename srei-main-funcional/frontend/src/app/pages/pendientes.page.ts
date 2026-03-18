@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { EventoService, EventoDto } from '../core/services/evento.service';
 import { ChangeDetectorRef } from '@angular/core'; // para forzarlo que funcione con un solo click
+import { AlertService } from '../core/services/alert.service';
 
 @Component({
   standalone: true,
@@ -25,11 +26,21 @@ import { ChangeDetectorRef } from '@angular/core'; // para forzarlo que funcione
       </div>
 
       <div class="card" style="margin-top:12px;" *ngFor="let e of eventos">
-        <div style="display:flex; justify-content:space-between; gap:10px;">
+        <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
           <div>
             <div style="font-weight:700;">{{ e.titulo }}</div>
-            <div style="color:#6b7280; font-size:13px;">
+          <div style=" display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
               {{ e.fecha }} · {{ e.lugar }} · {{ e.ambito }} · {{ e.facultad }}
+              <span
+                class="badge_proponer"
+                [ngClass]="{
+                  'badge-pendiente': e.estado === 'PENDIENTE',
+                  'badge-aprobado': e.estado === 'APROBADO',
+                  'badge-rechazado': e.estado === 'RECHAZADO',
+                }"
+              >
+                {{ e.estado }}
+              </span>
             </div>
             <div style="margin-top:8px;">{{ e.descripcion }}</div>
             <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
@@ -53,16 +64,6 @@ import { ChangeDetectorRef } from '@angular/core'; // para forzarlo que funcione
               </a>
             </div>
           </div>
-          <span
-  class="badge_proponer"
-  [ngClass]="{
-    'badge-pendiente': e.estado === 'PENDIENTE',
-    'badge-aprobado': e.estado === 'APROBADO',
-    'badge-rechazado': e.estado === 'RECHAZADO'
-  }"
->
-  {{e.estado}}
-</span>
         </div>
 
         <div style="margin-top:10px;">
@@ -108,6 +109,7 @@ export class PendientesPage {
     private eventoService: EventoService,
     private route: ActivatedRoute,
     private cd: ChangeDetectorRef,
+    private alertService: AlertService,
   ) {
     const url = this.route.snapshot.url.map((u) => u.path).join('/');
     if (url.includes('coordinador')) {
@@ -147,8 +149,9 @@ export class PendientesPage {
   decidir(id: number, estado: 'APROBADO' | 'RECHAZADO') {
     const obs = (this.observaciones[id] || '').trim();
     if (estado === 'RECHAZADO' && !obs) {
-      this.tipoMensaje = 'error';
-      this.mensaje = 'Para rechazar debes escribir una observación/motivo.';
+      //this.tipoMensaje = 'error';
+      //this.mensaje = 'Para rechazar debes escribir una observación/motivo.';
+      this.alertService.warning('Para rechazar debes escribir una observación/motivo.');
       return;
     }
 
@@ -162,9 +165,10 @@ export class PendientesPage {
         this.cargar();
       },
       error: (err: any) => {
-        this.tipoMensaje = 'error';
-        const msg = err?.error?.message || err?.message || 'No se pudo registrar la decisión.';
-        this.mensaje = msg;
+        //this.tipoMensaje = 'error';
+        //const msg = err?.error?.message || err?.message || 'No se pudo registrar la decisión.';
+        //this.mensaje = msg;
+        this.alertService.error('No se pudo registrar la decisión.');
       },
     });
   }
