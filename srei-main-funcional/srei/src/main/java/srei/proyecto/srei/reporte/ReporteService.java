@@ -1,12 +1,16 @@
 package srei.proyecto.srei.reporte;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import srei.proyecto.srei.asistencia.AsistenciaRepository;
 import srei.proyecto.srei.comentario.ComentarioRepository;
 import srei.proyecto.srei.common.util.UsuarioActualService;
 import srei.proyecto.srei.evento.*;
 import srei.proyecto.srei.reporte.dto.ReporteEventoDto;
+import srei.proyecto.srei.reporte.dto.ReporteFacultadCarreraDto;
+import srei.proyecto.srei.reporte.dto.ReporteFacultadCarreraDtoevento;
 import srei.proyecto.srei.reporte.dto.ReporteResumenDto;
 import srei.proyecto.srei.reporte.dto.SerieDto;
 import srei.proyecto.srei.usuario.RolNombre;
@@ -25,6 +29,85 @@ public class ReporteService {
     private final AsistenciaRepository asistenciaRepository;
     private final ComentarioRepository comentarioRepository;
     private final UsuarioActualService usuarioActualService;
+
+
+/*nicio victor */
+public List<ReporteFacultadCarreraDtoevento> carreras_eventosCoordinadorReporte()  {
+  List<ReporteFacultadCarreraDtoevento> reporte = eventoRepository.obtenerReporteFacultadCarreraPorEvento();
+
+    // Imprime cada registro en consola
+    reporte.forEach(r -> 
+        System.out.println("titulo: " + r.getevento() +
+                           ", Carrera: " + r.getCarrera() +
+                           ", Total: " + r.getTotal())
+    );
+
+    return reporte;
+    }
+public List<ReporteFacultadCarreraDto> participantesCoordinadorReporte()  {
+  List<ReporteFacultadCarreraDto> reporte = eventoRepository.obtenerReporteFacultadCarrera();
+
+    // Imprime cada registro en consola
+    reporte.forEach(r -> 
+        System.out.println("Facultad: " + r.getFacultad() +
+                           ", Carrera: " + r.getCarrera() +
+                           ", Total: " + r.getTotal())
+    );
+
+    return reporte;
+    }
+
+public List<ReporteEventoDto> AprobadosCoordinadorReporte()  {
+    var coord = usuarioActualService.obtener();
+
+boolean ok = coord.getRoles().stream()
+        .anyMatch(r -> RolNombre.COORDINADOR.equals(r.getNombre()) 
+                    || RolNombre.DECANO.equals(r.getNombre()) 
+                    || RolNombre.DOCENTE.equals(r.getNombre()));
+
+    if (!ok) throw new IllegalArgumentException("No autorizado");
+
+    return eventoRepository
+            .findByEstadoOrderByFechaAsc(EstadoAprobacion.APROBADO)
+            .stream()
+            .map(this::reporteEvento)
+            .toList();
+    }
+    
+public List<ReporteEventoDto> RerechazadosCoordinadorReporte()  {
+    var coord = usuarioActualService.obtener();
+
+   boolean ok = coord.getRoles().stream()
+        .anyMatch(r -> RolNombre.COORDINADOR.equals(r.getNombre()) 
+                    || RolNombre.DECANO.equals(r.getNombre()) 
+                    || RolNombre.DOCENTE.equals(r.getNombre()));
+
+    if (!ok) throw new IllegalArgumentException("No autorizado");
+
+    return eventoRepository
+            .findByEstadoOrderByFechaAsc(EstadoAprobacion.RECHAZADO)
+            .stream()
+            .map(this::reporteEvento)
+            .toList();
+    }
+public List<ReporteEventoDto> PendientesCoordinadorReporte()  {
+    var coord = usuarioActualService.obtener();
+
+    boolean ok = coord.getRoles().stream()
+        .anyMatch(r -> RolNombre.COORDINADOR.equals(r.getNombre()) 
+                    || RolNombre.DECANO.equals(r.getNombre()) 
+                    || RolNombre.DOCENTE.equals(r.getNombre()));
+
+    if (!ok) throw new IllegalArgumentException("No autorizado");
+
+    return eventoRepository
+            .findByEstadoOrderByFechaAsc(EstadoAprobacion.PENDIENTE)
+            .stream()
+            .map(this::reporteEvento)
+            .toList();
+    }
+
+/* fin nuvo*/
 
     public List<ReporteEventoDto> reportesDecano() {
         var decano = usuarioActualService.obtener();

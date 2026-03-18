@@ -4,169 +4,291 @@ import { FormsModule } from '@angular/forms';
 import { EventoService } from '../core/services/evento.service';
 import { CarreraDto, FacultadDto, FacultadService } from '../core/services/facultad.service';
 import { ChangeDetectorRef } from '@angular/core'; // para forzarlo que funcione con un solo click
+import { RouterLink } from '@angular/router';
+import { IonicModule } from '@ionic/angular';
+
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import Swal from 'sweetalert2';
+import { AlertService } from '../core/services/alert.service';
+
 
 const MAPA_FACULTAD_CARRERAS: Record<string, string[]> = {
   'Ciencias de la Computación': ['Software', 'Telemática', 'Sistemas'],
   'Ciencias Empresariales': ['Contabilidad', 'Economía'],
 };
+declare var puter: any;
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IonicModule],
+
   template: `
-    <div class="card">
-      <h2 style="margin:0;">Proponer evento</h2>
-      <p style="margin-top:8px; color:#6b7280;">
-        Completa la información, sube imagen y PDF del informe.
-      </p>
 
-      <div class="card" style="margin-top:12px;">
-        <div class="row">
-          <div><label>Título</label><input class="input" [(ngModel)]="titulo" /></div>
-          <div><label>Fecha</label><input class="input" type="date" [(ngModel)]="fecha" /></div>
-        </div>
+        <div class="card">
+          <h2 style="margin:0;">Proponer evento</h2>
+          <p style="margin-top:8px; color:#6b7280;">
+            Completa la información, sube imagen y PDF del informe.
+          </p>
 
-        <div style="margin-top:12px;">
-          <label>Descripción</label>
-          <textarea class="input" style="min-height:90px" [(ngModel)]="descripcion"></textarea>
-        </div>
+          <div class="card" style="margin-top:12px;">
+            <div class="row">
+              <div><label>Título</label><input class="input" [(ngModel)]="titulo" /></div>
+              <div>
+                <label>Fecha</label
+                ><input class="input" type="date" [(ngModel)]="fecha" [min]="minDate" />
+              </div>
+              <div><label>Hora</label><input class="input" type="time" [(ngModel)]="hora" /></div>
+            </div>
 
-        <div style="margin-top:12px;">
-          <label>Lugar</label><input class="input" [(ngModel)]="lugar" />
-        </div>
+            <div style="margin-top:12px;">
+              <label>Descripción</label>
+              <textarea class="input" style="min-height:90px" [(ngModel)]="descripcion"></textarea>
+            </div>
 
-        <div class="row" style="margin-top:12px;">
-          <div>
-            <label>Ámbito</label>
-            <select class="input" [(ngModel)]="ambito" (ngModelChange)="onCambiarAmbito($event)">
-              <option value="FACULTAD">FACULTAD</option>
-              <option value="CARRERA">CARRERA</option>
-            </select>
-          </div>
-          <div>
-            <label>Facultad</label>
-            <select
-              class="input"
-              [(ngModel)]="facultadId"
-              (ngModelChange)="onCambiarFacultad($event)"
+            <div style="margin-top:12px;">
+              <label>Lugar</label><input class="input" [(ngModel)]="lugar" />
+            </div>
+
+            <div class="row" style="margin-top:12px;">
+              <div>
+                <label>Ámbito</label>
+                <select
+                  class="input"
+                  [(ngModel)]="ambito"
+                  (ngModelChange)="onCambiarAmbito($event)"
+                >
+                  <option value="FACULTAD">FACULTAD</option>
+                  <option value="CARRERA">CARRERA</option>
+                </select>
+              </div>
+              <div>
+                <label>Facultad</label>
+                <select
+                  class="input"
+                  [(ngModel)]="facultadSeleccionada"
+                  (change)="onCambiarFacultad()"
+                >
+                  <option [ngValue]="null" disabled>Seleccione una facultad</option>
+
+                  <option *ngFor="let f of facultades" [ngValue]="f">
+                    {{ f.nombre }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:12px;">
+              <div>
+                <label>Carrera</label>
+                <select
+                  class="input"
+                  [(ngModel)]="carreraSeleccionada"
+                  [disabled]="!facultadId || ambito !== 'CARRERA'"
+                  (change)="onCambiarCarrera()"
+                >
+                  <option [ngValue]="null" disabled>Seleccione una carrera</option>
+
+                  <option *ngFor="let c of carreras" [ngValue]="c">
+                    {{ c.nombre }}
+                  </option>
+                </select>
+
+                <div
+                  style="font-size:12px; color:#6b7280; margin-top:6px;"
+                  *ngIf="ambito === 'FACULTAD'"
+                >
+                  Para eventos por FACULTAD no es obligatorio seleccionar carrera.
+                </div>
+              </div>
+              <div></div>
+            </div>
+
+            <div class="row" style="margin-top:12px;">
+              <div>
+                <div>
+                  <label>Imagen del evento</label>
+
+                  <div style="display:flex; gap:20px; margin-top:8px;">
+                    <label>
+                      <input type="radio" [(ngModel)]="modoImagen" value="SUBIR" />
+                      Subir imagen
+                    </label>
+
+                    <label>
+                      <input type="radio" [(ngModel)]="modoImagen" value="IA" />
+                      Generar con IA
+                    </label>
+                  </div>
+
+                  <!-- SUBIR IMAGEN -->
+                  <div *ngIf="modoImagen === 'SUBIR'" style="margin-top:10px;">
+                    <input class="input" type="file" accept="image/*" (change)="onImagen($event)" />
+                  </div>
+
+                  <!-- GENERAR CON IA -->
+                  <div *ngIf="modoImagen === 'IA'" style="margin-top:10px;">
+                    <textarea
+                      class="input"
+                      style="min-height:80px"
+                      [(ngModel)]="promptIA"
+                      placeholder="Ejemplo: evento universitario tecnológico con estudiantes y computadoras"
+                    ></textarea>
+
+                    <button
+                      type="button"
+                      class="btn btn-naranja"
+                      style="margin-top:8px;"
+                      (click)="generarImagenIA()"
+                    >
+                      <span class="material-icons">auto_awesome</span>
+                      Generar imagen
+                    </button>
+                  </div>
+
+                  <!-- PREVIEW -->
+                  <div *ngIf="previewIA" style="margin-top:10px;">
+                    <img [src]="previewIA" style="width:250px; border-radius:10px;" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label>Informe PDF</label>
+                <input
+                  class="input"
+                  type="file"
+                  accept="application/pdf"
+                  (change)="onPdf($event)"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-verde"
+              style="margin-top:12px;"
+              (click)="guardar()"
             >
-              <option [ngValue]="null" disabled>Seleccione una facultad</option>
-              <option *ngFor="let f of facultades" [ngValue]="f.idfacultad">
-                {{ f.nombre }}
-              </option>
-            </select>
-          </div>
-        </div>
+              <span class="material-icons">publish</span>
+              Enviar propuesta
+            </button>
 
-        <div class="row" style="margin-top:12px;">
-          <div>
-            <label>Carrera</label>
-            <select
-              class="input"
-              [(ngModel)]="carreraId"
-              [disabled]="!facultadId || ambito !== 'CARRERA'"
-            >
-              <option [ngValue]="null" disabled>Seleccione una carrera</option>
-              <option *ngFor="let c of carreras" [ngValue]="c.idcarrera">
-                {{ c.nombre }}
-              </option>
-            </select>
-            <div
-              style="font-size:12px; color:#6b7280; margin-top:6px;"
-              *ngIf="ambito === 'FACULTAD'"
-            >
-              Para eventos por FACULTAD no es obligatorio seleccionar carrera.
+            <div *ngIf="mensaje" class="alert success" style="margin-top:12px;">
+              <span class="material-icons">check_circle</span>
+              <div>{{ mensaje }}</div>
+            </div>
+
+            <div *ngIf="error" class="alert error" style="margin-top:12px;">
+              <span class="material-icons">error</span>
+              <div>{{ error }}</div>
             </div>
           </div>
-          <div></div>
         </div>
-
-        <div class="row" style="margin-top:12px;">
-          <div>
-            <label>Imagen</label>
-            <input class="input" type="file" accept="image/*" (change)="onImagen($event)" />
-          </div>
-          <div>
-            <label>Informe PDF</label>
-            <input class="input" type="file" accept="application/pdf" (change)="onPdf($event)" />
-          </div>
-        </div>
-
-        <button type="button" class="btn btn-primary" style="margin-top:12px;" (click)="guardar()">
-          <span class="material-icons">publish</span>
-          Enviar propuesta
-        </button>
-
-        <div *ngIf="mensaje" class="alert success" style="margin-top:12px;">
-          <span class="material-icons">check_circle</span>
-          <div>{{ mensaje }}</div>
-        </div>
-
-        <div *ngIf="error" class="alert error" style="margin-top:12px;">
-          <span class="material-icons">error</span>
-          <div>{{ error }}</div>
-        </div>
-      </div>
-    </div>
+   
   `,
 })
 export class DocenteProponerPage {
+  //variable IA
+  promptIA: string = '';
+  previewIA: string | null = null;
+  modalIA = false;
+
+  modoImagen: 'SUBIR' | 'IA' = 'SUBIR';
+  // fin variable IA
   titulo = '';
   descripcion = '';
   fecha = '';
   lugar = '';
+  hora = '';
+
   ambito: 'FACULTAD' | 'CARRERA' = 'FACULTAD';
 
   facultades: FacultadDto[] = [];
   carreras: CarreraDto[] = [];
 
   facultadId: number | null = null;
-  carreraId: number | null = null;
+  facultadSeleccionada: FacultadDto | null = null;
 
-  facultad = '';
-  carrera = '';
+  carreraId: number | null = null;
+  carreraSeleccionada: CarreraDto | null = null;
 
   imagen: File | null = null;
   informePdf: File | null = null;
+
   mensaje = '';
   error = '';
+  minDate = '';
 
   constructor(
     private eventoService: EventoService,
     private facultadService: FacultadService,
+    private alertService: AlertService,
     private cd: ChangeDetectorRef,
-  ) {}
+  ) {
+    const today = new Date();
+    // Sumar 1 día para que sea mañana
+    today.setDate(today.getDate() + 1);
+
+    // Formatear a YYYY-MM-DD
+    this.minDate = today.toISOString().split('T')[0];
+  }
 
   ngOnInit() {
     // preselección opcional
-    this.onCambiarAmbito(this.ambito);
-
+    //this.onCambiarAmbito(this.ambito);
     this.facultadService.facultades().subscribe({
       next: (data) => {
         this.facultades = data;
         this.cd.detectChanges(); // fuerza actualización de la vista
+      },
+      error: () => {
+         this.alertService.warning('No se pudieron cargar las facultades');
       },
     });
   }
 
   onCambiarAmbito(valor: 'FACULTAD' | 'CARRERA') {
     this.ambito = valor;
-    // si cambia a FACULTAD, no obligar carrera
-    if (this.ambito === 'FACULTAD') {
-      this.carrera = '';
+
+    if (valor === 'FACULTAD') {
+      this.carreraId = null;
     }
   }
 
-  onCambiarFacultad(idfacultad: number) {
-    this.facultadId = idfacultad;
-    this.carreraId = null;
+  onCambiarFacultad() {
+    const facultad = this.facultadSeleccionada as any;
 
-    this.facultadService.carrerasPorFacultad(idfacultad).subscribe({
+    console.log('facultad:', this.facultadSeleccionada);
+    if (!facultad) return;
+
+    const id = facultad.id;
+    this.facultadId = id;
+
+    console.log('ID facultad:', id);
+
+    this.facultadService.carrerasPorFacultad(id).subscribe({
       next: (data) => {
+        console.log('carreras:', data);
         this.carreras = data;
-        console.log('Carreras:', data);
+        this.cd.detectChanges(); // fuerza actualización de la vista
+      },
+      error: (e) => {
+         this.alertService.warning('No se pudieron cargar las carreras');
+        console.log('error:', e);
       },
     });
+  }
+
+  onCambiarCarrera() {
+    const carrera = this.carreraSeleccionada as any;
+
+    console.log('Carrera:', this.carreraSeleccionada);
+    if (!carrera) return;
+
+    const id = carrera.id;
+    this.carreraId = id;
+
+    console.log('ID carrera:', id);
   }
 
   onImagen(ev: any) {
@@ -176,7 +298,7 @@ export class DocenteProponerPage {
       return;
     }
     if (!f.type.startsWith('image/')) {
-      this.error = 'Debe seleccionar un archivo de imagen (png/jpg/webp).';
+       this.alertService.warning('Debe seleccionar un archivo de imagen (png/jpg/webp).');
       this.imagen = null;
       ev.target.value = '';
       return;
@@ -191,7 +313,7 @@ export class DocenteProponerPage {
       return;
     }
     if (f.type !== 'application/pdf') {
-      this.error = 'Debe seleccionar un archivo PDF.';
+       this.alertService.warning('Debe seleccionar un archivo PDF.');
       this.informePdf = null;
       ev.target.value = '';
       return;
@@ -203,33 +325,41 @@ export class DocenteProponerPage {
     this.mensaje = '';
     this.error = '';
 
-    const roles = JSON.parse(localStorage.getItem('roles') || '[]');
-    if (!roles.includes('DOCENTE')) {
-      this.error = 'Solo un usuario con rol DOCENTE puede proponer eventos.';
+    if (!this.titulo.trim()) {
+      //this.error = 'Debe ingresar el título';
+      this.alertService.warning('Debe ingresar el título');
       return;
     }
 
-    if (!this.titulo.trim()) {
-      this.error = 'Debe ingresar el título.';
+    if (!this.fecha) {
+      //this.error = 'Debe seleccionar la fecha';
+       this.alertService.warning('Debe seleccionar la fecha');
       return;
     }
     if (!this.fecha) {
-      this.error = 'Debe seleccionar la fecha.';
-      return;
-    }
-    if (!this.lugar.trim()) {
-      this.error = 'Debe ingresar el lugar.';
-      return;
-    }
-    if (!this.facultad) {
-      this.error = 'Debe seleccionar la facultad.';
+       this.alertService.warning('Debe seleccionar la hora');
       return;
     }
 
-    if (this.ambito === 'CARRERA' && !this.carrera) {
-      this.error = 'Debe seleccionar la carrera.';
+    if (!this.lugar.trim()) {
+       this.alertService.warning('Debe ingresar el lugar');
       return;
     }
+
+    if (!this.facultadId) {
+       this.alertService.warning('Debe seleccionar una facultad');
+      return;
+    }
+
+    if (this.ambito === 'CARRERA' && !this.carreraId) {
+       this.alertService.warning('Debe seleccionar una carrera');
+      return;
+    }
+    const confirmar = this.alertService.confirm('¿Desea enviar el evento?');
+
+    if (!confirmar) return;
+
+    this.alertService.loading();
 
     this.eventoService
       .proponer({
@@ -238,31 +368,134 @@ export class DocenteProponerPage {
         fecha: this.fecha,
         lugar: this.lugar,
         ambito: this.ambito,
-        facultad: String(this.facultadId),
-        carrera: this.carreraId ? String(this.carreraId) : undefined,
+        hora: this.hora,
+
+        facultad: String(this.facultadSeleccionada?.nombre),
+        carrera: String(this.carreraSeleccionada?.nombre),
+
         imagen: this.imagen,
         informePdf: this.informePdf,
       })
       .subscribe({
         next: (e) => {
-          this.mensaje = 'Evento registrado. Estado: ' + e.estado;
-          this.titulo = this.descripcion = this.fecha = this.lugar = '';
-          this.facultad = '';
-          this.carrera = '';
+         
+          this.Alertmensaje(1,'Evento enviado correctamente');
+          
+          this.titulo = '';
+          this.descripcion = '';
+          this.fecha = '';
+          this.lugar = '';
+
+          this.facultadId = null;
+          this.carreraId = null;
+
           this.carreras = [];
-          this.imagen = this.informePdf = null;
+
+          this.imagen = null;
+          this.informePdf = null;
         },
-        error: (e) => {
-          if (e?.status === 0) {
-            this.error =
-              'No se pudo conectar con el servidor. Verifica que el backend esté en http://localhost:8080.';
-            return;
-          }
-          const msg = e?.error?.message || e?.error?.error || e?.message;
-          this.error = msg
-            ? String(msg)
-            : `No se pudo registrar el evento (HTTP ${e?.status || '???'}).`;
+
+        error: () => {
+
+          this.Alertmensaje(5,'No se pudo registrar el evento');
         },
       });
   }
+
+  //Funciones con IA
+
+  generarImagenIA() {
+    if (!this.promptIA.trim()) {
+       this.alertService.warning('Debe escribir una descripción');
+      return;
+    }
+
+    this.eventoService.generarImagenIA(this.promptIA).subscribe({
+      next: (data: any) => {
+        this.previewIA = data.url;
+
+        fetch(data.url)
+          .then((res) => res.blob())
+          .then((blob) => {
+            const file = new File([blob], 'evento.png', { type: 'image/png' });
+
+            this.imagen = file;
+          });
+      },
+
+      error: () => {
+         this.alertService.warning('No se pudo generar la imagen');
+      },
+    });
+  }
+
+  /*
+  async generarImagenIA() {
+    if (!this.promptIA.trim()) {
+      alert('Escribe una descripción');
+      return;
+    }
+
+    try {
+      const img = await puter.ai.image({
+        prompt: this.promptIA,
+        size: '1024x1024',
+      });
+
+      this.previewIA = img.url;
+
+      // Convertir la imagen a File para enviarla al backend
+      const res = await fetch(img.url);
+      const blob = await res.blob();
+
+      this.imagen = new File([blob], 'evento.png', {
+        type: 'image/png',
+      });
+    } catch (error) {
+      console.error(error);
+      alert('Error generando la imagen');
+    }
+  }
+    */
+
+
+
+Alertmensaje ( tipo:number, message: string)
+{
+  /* tipo
+     1 suceess
+     2 warning
+     3 loading
+     4 erorsin carga
+     5 errorcargar
+
+  */ 
+   switch(tipo){
+    case 1 :
+      this.alertService.close();
+          this.alertService.success(message);
+      break;
+
+    case 2:
+          this.alertService.warning(message);
+      break;
+
+    case 3:
+      this.alertService.loading();
+      break;
+    case 4:
+      this.alertService.error(message);
+      break; 
+    case 5:
+      this.alertService.close();
+      this.alertService.error(message);
+      break; 
+
+   };
+  
+
+  
+}
+
+
 }

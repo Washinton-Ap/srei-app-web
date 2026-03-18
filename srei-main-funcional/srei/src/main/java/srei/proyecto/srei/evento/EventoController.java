@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,22 +52,22 @@ public class EventoController {
             @RequestParam String fecha,
             @RequestParam String lugar,
             @RequestParam AmbitoEvento ambito,
+            @RequestParam String hora,
             @RequestParam(required = false) String facultad,
             @RequestParam(required = false) String carrera,
             @RequestPart(required = false) MultipartFile imagen,
-            @RequestPart(required = false) MultipartFile informePdf
-    ) {
+            @RequestPart(required = false) MultipartFile informePdf) {
         return ResponseEntity.ok(eventoService.proponer(
                 titulo,
                 descripcion,
                 parseFecha(fecha),
                 lugar,
                 ambito,
+                parseHora(hora),
                 facultad,
                 carrera,
                 imagen,
-                informePdf
-        ));
+                informePdf));
     }
 
     private LocalDate parseFecha(String fecha) {
@@ -82,6 +83,20 @@ public class EventoController {
             } catch (DateTimeParseException ex) {
                 throw new IllegalArgumentException("Fecha inválida. Use AAAA-MM-DD");
             }
+        }
+    }
+
+    private LocalTime parseHora(String hora) {
+        if (hora == null || hora.isBlank()) {
+            throw new IllegalArgumentException("Debe indicar la hora");
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+
+        try {
+            return LocalTime.parse(hora, formatter);
+        } catch (DateTimeParseException ex) {
+            throw new IllegalArgumentException("Hora inválida. Use formato HH:mm (ej: 14:30)");
         }
     }
 
@@ -110,7 +125,8 @@ public class EventoController {
         return ResponseEntity.ok(eventoService.misEventos(Optional.ofNullable(estado)));
     }
 
-    // DOCENTE: reenviar evento rechazado (vuelve a PENDIENTE). Permite actualizar datos y archivos.
+    // DOCENTE: reenviar evento rechazado (vuelve a PENDIENTE). Permite actualizar
+    // datos y archivos.
     @PutMapping(value = "/{id}/reenviar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('DOCENTE')")
     public ResponseEntity<EventoDto> reenviar(
@@ -119,12 +135,12 @@ public class EventoController {
             @RequestParam String descripcion,
             @RequestParam String fecha,
             @RequestParam String lugar,
+             @RequestParam String hora,
             @RequestParam AmbitoEvento ambito,
             @RequestParam(required = false) String facultad,
             @RequestParam(required = false) String carrera,
             @RequestPart(required = false) MultipartFile imagen,
-            @RequestPart(required = false) MultipartFile informePdf
-    ) {
+            @RequestPart(required = false) MultipartFile informePdf) {
         return ResponseEntity.ok(eventoService.reenviar(
                 id,
                 titulo,
@@ -132,14 +148,13 @@ public class EventoController {
                 parseFecha(fecha),
                 lugar,
                 ambito,
+                parseHora(hora),
                 facultad,
                 carrera,
                 imagen,
-                informePdf
-        ));
+                informePdf));
     }
 
-    
     @GetMapping("/{id}/imagen")
     @PreAuthorize("hasAnyRole('ASISTENTE','DOCENTE','COORDINADOR','DECANO','ADMIN')")
     public ResponseEntity<byte[]> verImagen(@PathVariable Long id) {
@@ -152,7 +167,7 @@ public class EventoController {
         return eventoService.verInforme(id);
     }
 
-@GetMapping("/plantilla-informe")
+    @GetMapping("/plantilla-informe")
     public ResponseEntity<byte[]> plantillaPdf() {
         try (PDDocument doc = new PDDocument(); ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             PDPage page = new PDPage(PDRectangle.A4);
@@ -193,4 +208,5 @@ public class EventoController {
             throw new IllegalArgumentException("No se pudo generar plantilla");
         }
     }
+
 }

@@ -9,6 +9,7 @@ export interface EventoDto {
   fecha: string;
   lugar: string;
   ambito: 'FACULTAD' | 'CARRERA';
+  hora: string;
   facultad?: string;
   carrera?: string;
   estado: 'PENDIENTE' | 'APROBADO' | 'RECHAZADO';
@@ -41,7 +42,10 @@ export class EventoService {
   }
 
   decidir(id: number, estado: 'APROBADO' | 'RECHAZADO', observaciones: string) {
-    return this.http.post<EventoDto>(this.apiUrl + `/eventos/${id}/decision`, { estado, observaciones });
+    return this.http.post<EventoDto>(this.apiUrl + `/eventos/${id}/decision`, {
+      estado,
+      observaciones,
+    });
   }
 
   proponer(form: {
@@ -50,6 +54,7 @@ export class EventoService {
     fecha: string;
     lugar: string;
     ambito: 'FACULTAD' | 'CARRERA';
+    hora: string;
     facultad?: string;
     carrera?: string;
     imagen?: File | null;
@@ -61,6 +66,7 @@ export class EventoService {
     fd.append('fecha', form.fecha);
     fd.append('lugar', form.lugar);
     fd.append('ambito', form.ambito);
+     fd.append('hora', form.hora);
     if (form.facultad) fd.append('facultad', form.facultad);
     if (form.carrera) fd.append('carrera', form.carrera);
     if (form.imagen) fd.append('imagen', form.imagen);
@@ -74,17 +80,21 @@ export class EventoService {
     return this.http.get<EventoDto[]>(this.apiUrl + '/eventos/mios' + q);
   }
 
-  reenviar(id: number, form: {
-    titulo: string;
-    descripcion: string;
-    fecha: string;
-    lugar: string;
-    ambito: 'FACULTAD' | 'CARRERA';
-    facultad?: string;
-    carrera?: string;
-    imagen?: File | null;
-    informePdf?: File | null;
-  }) {
+  reenviar(
+    id: number,
+    form: {
+      titulo: string;
+      descripcion: string;
+      fecha: string;
+      lugar: string;
+      ambito: 'FACULTAD' | 'CARRERA';
+      hora:string;
+      facultad?: string;
+      carrera?: string;
+      imagen?: File | null;
+      informePdf?: File | null;
+    },
+  ) {
     const fd = new FormData();
     fd.append('titulo', form.titulo);
     fd.append('descripcion', form.descripcion);
@@ -100,5 +110,9 @@ export class EventoService {
 
   informeBlob(id: number) {
     return this.http.get(this.apiUrl + `/eventos/${id}/informe`, { responseType: 'blob' });
+  }
+
+  generarImagenIA(prompt: string) {
+    return this.http.post(this.apiUrl+'/ia/generar-imagen', { prompt });
   }
 }

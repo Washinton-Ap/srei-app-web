@@ -11,6 +11,7 @@ import { IonicModule } from '@ionic/angular';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { ChangeDetectorRef } from '@angular/core'; // para forzarlo que funcione con un solo click
 
 @Component({
   standalone: true,
@@ -26,25 +27,59 @@ import * as XLSX from 'xlsx';
       </span> -->
         </div>
       </div>
+      <div class="kpi-grid" *ngIf="resumen">
+        <div class="kpi">
+          <div class="kpi-title">Total eventos</div>
+          <div class="kpi-value">{{ resumen.totalEventos }}</div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-title">Registrados</div>
+          <div class="kpi-value">{{ resumen.registrados }}</div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-title">Confirmados</div>
+          <div class="kpi-value">{{ resumen.confirmados }}</div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-title">Comentarios</div>
+          <div class="kpi-value">{{ resumen.comentarios }}</div>
+        </div>
+      </div>
 
       <div class="acciones">
-        <button class="btn btn-success" (click)="exportarExcel()">Exportar Excel</button>
+        <button class="btn btn-success" (click)="exportarExcel()">
+          <span class="material-icons">picture_as_pdf</span>
 
-        <button class="btn btn-danger" (click)="exportarPDF()">Exportar PDF</button>
+          Exportar Excel
+        </button>
 
-        <button class="btn" (click)="cargar()">Actualizar</button>
+        <button class="btn btn-naranja" (click)="exportarPDF()">
+          <span class="material-icons">picture_as_pdf</span>
+          Exportar PDF
+        </button>
+
+        <!--<button class="btn" (click)="cargar()">Actualizar</button>-->
       </div>
 
       <div class="filtros">
         <div class="campo">
-          <select (change)="generarReporte($any($event.target).value)">
-            <option value="">Seleccione un reporte</option>
+          <label>Reportes</label>
+          <select
+            class="input"
+            [(ngModel)]="reporteSeleccionado"
+            (change)="generarReporte(this.reporteSeleccionado ? this.reporteSeleccionado : '')"
+          >
+            <option [ngValue]="null" disabled>Seleccione un reporte</option>
 
-            <option *ngFor="let r of reportesDisponibles" [value]="r.codigo">
+            <option *ngFor="let r of reportesDisponibles" [ngValue]="r.codigo">
               {{ r.nombre }}
             </option>
           </select>
         </div>
+
         <!--
       <div class="campo">
         <label>Buscar</label>
@@ -62,53 +97,24 @@ import * as XLSX from 'xlsx';
       </div>
 -->
       </div>
-      <!--
-    <div class="kpi-grid" *ngIf="resumen">
-      <div class="kpi">
-        <div class="kpi-title">Total eventos</div>
-        <div class="kpi-value">{{ resumen.totalEventos }}</div>
-      </div>
 
-      <div class="kpi">
-        <div class="kpi-title">Registrados</div>
-        <div class="kpi-value">{{ resumen.registrados }}</div>
-      </div>
+      <table class="card tabla">
+        <thead>
+          <tr>
+            <th *ngFor="let col of columnas">
+              {{ formatearColumna(col) | titlecase }}
+            </th>
+          </tr>
+        </thead>
 
-      <div class="kpi">
-        <div class="kpi-title">Confirmados</div>
-        <div class="kpi-value">{{ resumen.confirmados }}</div>
-      </div>
-
-      <div class="kpi">
-        <div class="kpi-title">Comentarios</div>
-        <div class="kpi-value">{{ resumen.comentarios }}</div>
-      </div>
-    </div>
--->
-
-      <div class="card tabla">
-        <table>
-          <thead>
-            <tr>
-              <th>Evento</th>
-              <th>Registrados</th>
-              <th>Confirmados</th>
-              <th>Comentarios</th>
-              <th>Impacto</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <tr *ngFor="let r of reportesPaginados">
-              <td>{{ r.titulo }}</td>
-              <td>{{ r.registrados }}</td>
-              <td>{{ r.confirmados }}</td>
-              <td>{{ r.comentariosVisibles }}</td>
-              <td>{{ r.impacto }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <tbody>
+          <tr *ngFor="let r of reportesPaginados">
+            <td *ngFor="let col of columnas">
+              {{ r[col] }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
       <div class="paginacion">
         <button (click)="pagina = pagina - 1" [disabled]="pagina == 1">Anterior</button>
 
@@ -137,7 +143,7 @@ export class ReportesPage implements OnInit {
   rolesUsuario: string[] = [];
   rolActivo = '';
 
-  reporteSeleccionado: string = '';
+  reporteSeleccionado: string | null = null;
 
   reportesDisponibles: any[] = [];
 
@@ -148,6 +154,8 @@ export class ReportesPage implements OnInit {
   grafico?: Chart;
   pagina = 1;
   porPagina = 5;
+
+  columnas: string[] = [];
   reportesPorRol: any = {
     ASISTENTE: [
       { nombre: 'Eventos asistidos', codigo: 'eventos_asistidos' },
@@ -159,23 +167,23 @@ export class ReportesPage implements OnInit {
       { nombre: 'Eventos aprobados', codigo: 'aprobados' },
       { nombre: 'Eventos rechazados', codigo: 'rechazados' },
       { nombre: 'Eventos pendientes', codigo: 'pendientes' },
-      { nombre: 'Número de participantes', codigo: 'participantes' },
+      { nombre: 'Número de participantes', codigo: 'carreras_eventos' },
     ],
 
     COORDINADOR: [
       { nombre: 'Eventos aprobados', codigo: 'aprobados' },
       { nombre: 'Eventos rechazados', codigo: 'rechazados' },
       { nombre: 'Eventos pendientes', codigo: 'pendientes' },
-      { nombre: 'Número de participantes', codigo: 'participantes' },
-      { nombre: 'Carreras con más eventos', codigo: 'carreras_eventos' },
+      { nombre: 'Número de participantes', codigo: 'carreras_eventos' },
+      { nombre: 'Carreras con más eventos', codigo: 'participantes' },
     ],
 
     DECANO: [
       { nombre: 'Eventos aprobados', codigo: 'aprobados' },
       { nombre: 'Eventos rechazados', codigo: 'rechazados' },
       { nombre: 'Eventos pendientes', codigo: 'pendientes' },
-      { nombre: 'Número de participantes', codigo: 'participantes' },
-      { nombre: 'Facultad con más eventos', codigo: 'facultades_eventos' },
+      { nombre: 'Número de participantes', codigo: 'facultades_eventos' },
+      { nombre: 'Facultad con más eventos', codigo: 'participantes' },
     ],
 
     ADMIN: [
@@ -184,7 +192,10 @@ export class ReportesPage implements OnInit {
     ],
   };
 
-  constructor(private reporteService: ReporteService) {}
+  constructor(
+    private reporteService: ReporteService,
+    private cd: ChangeDetectorRef,
+  ) {}
 
   ngOnInit() {
     const roles = JSON.parse(localStorage.getItem('roles') || '[]');
@@ -209,15 +220,22 @@ export class ReportesPage implements OnInit {
       ? this.reporteService.resumenDecano()
       : this.reporteService.resumenCoordinador();
 
-    lista$.subscribe({
-      next: (d) => (this.reportes = d || []),
+    /*lista$.subscribe({
+      next: (data) => {
+        this.reportes = data;
+        this.cd.detectChanges(); // fuerza actualización de la vista
+      },
       error: (e) => (this.error = e?.error?.message || 'No se pudo cargar reportes'),
-    });
+    }); */
 
     resumen$.subscribe({
-      next: (d) => (this.resumen = d),
+      next: (data) => {
+        this.resumen = data;
+        this.cd.detectChanges(); // fuerza actualización de la vista
+      },
       error: (e) => (this.error = e?.error?.message || 'No se pudo generar resumen'),
     });
+    this.cd.detectChanges(); // fuerza actualización de la vista
   }
 
   generarReporte(tipo: string) {
@@ -228,13 +246,22 @@ export class ReportesPage implements OnInit {
       next: (data) => {
         this.reportesOriginal = data;
         this.reportes = data;
+        this.cd.detectChanges(); // fuerza actualización de la vista
+        // detectar columnas dinámicamente
+        if (data.length > 0) {
+          this.columnas = Object.keys(data[0]);
+          this.cd.detectChanges(); // fuerza actualización de la vista
+        }
+
+        this.cd.detectChanges();
+
+        setTimeout(() => this.crearGrafico(), 100);
       },
 
       error: (e) => {
         this.error = e?.error?.message || 'No se pudo generar el reporte';
       },
     });
-    setTimeout(() => this.crearGrafico(), 100);
   }
   /*
   exportarPDF() {
@@ -273,11 +300,15 @@ export class ReportesPage implements OnInit {
 
     const workbook = XLSX.utils.book_new();
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, this.reporteSeleccionado);
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      this.reporteSeleccionado ? this.reporteSeleccionado : '',
+    );
 
     XLSX.writeFile(workbook, `reporte-${this.reporteSeleccionado}.xlsx`);
   }
-
+  /*
   crearGrafico() {
     const labels = this.reportes.map((r) => r.titulo);
     const registrados = this.reportes.map((r) => r.registrados);
@@ -309,7 +340,58 @@ export class ReportesPage implements OnInit {
         plugins: {
           title: {
             display: true,
-            text: this.reporteSeleccionado,
+            text: this.reporteSeleccionado ? this.reporteSeleccionado : '',
+          },
+        },
+      },
+    });
+  }
+
+  */
+
+  crearGrafico() {
+    if (!this.reportes || this.reportes.length === 0) return;
+
+    if (this.grafico) {
+      this.grafico.destroy();
+    }
+
+    const columnas = Object.keys(this.reportes[0]);
+
+    // buscar columna para etiquetas (titulo o evento)
+    const labelCol =
+      columnas.find((c) => c.toLowerCase().includes('titulo')) ||
+      columnas.find((c) => c.toLowerCase().includes('evento')) ||
+      columnas.find((c) => typeof this.reportes[0][c] === 'string');
+
+    // columnas numéricas
+    const columnasNumericas = columnas.filter(
+      (c) => typeof this.reportes[0][c] === 'number' && !c.toLowerCase().includes('id'),
+    );
+
+    if (!labelCol) return;
+
+    const labels = this.reportes.map((r) => r[labelCol]);
+
+    const datasets = columnasNumericas.map((col) => ({
+      label: this.formatearColumna(col),
+      data: this.reportes.map((r) => r[col]),
+    }));
+
+    this.grafico = new Chart('graficoReporte', {
+      type: 'bar',
+
+      data: {
+        labels: labels,
+        datasets: datasets,
+      },
+
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: this.obtenerNombreReporte(),
           },
         },
       },
@@ -373,15 +455,20 @@ export class ReportesPage implements OnInit {
 
     // Nombre del reporte
     doc.setFontSize(11);
-    doc.text(`Reporte: ${this.reporteSeleccionado}`, 150, 14);
+    doc.text(`Reporte: ${this.obtenerNombreReporte()}`, 150, 14);
 
     // Fecha
     const fecha = new Date().toLocaleDateString();
     doc.setFontSize(10);
     doc.text(`Generado: ${fecha}`, 150, 22);
     // ===== TABLA =====
-    const columnas = Object.keys(this.reportes[0]);
-    const filas = this.reportes.map((obj) => Object.values(obj));
+    const columnasOriginal = Object.keys(this.reportes[0]).filter(
+      (col) => !col.toLowerCase().includes('id'),
+    );
+
+    const columnas = columnasOriginal.map((col) => this.formatearColumna(col));
+
+    const filas = this.reportes.map((obj) => columnasOriginal.map((col) => obj[col]));
 
     autoTable(doc, {
       head: [columnas],
@@ -426,5 +513,15 @@ export class ReportesPage implements OnInit {
     }
 
     doc.save(`reporte-${this.reporteSeleccionado}.pdf`);
+  }
+
+  formatearColumna(col: string): string {
+    return col.replace(/^get/i, '').replace('_', ' ').toUpperCase();
+  }
+
+  obtenerNombreReporte(): string {
+    const reporte = this.reportesDisponibles.find((r) => r.codigo === this.reporteSeleccionado);
+
+    return reporte ? reporte.nombre : '';
   }
 }

@@ -4,12 +4,14 @@ import srei.proyecto.srei.evento.AmbitoEvento;
 import srei.proyecto.srei.evento.EstadoAprobacion;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public record EventoDto(
         Long id,
         String titulo,
         String descripcion,
-        LocalDate fecha,
+        LocalDateTime fecha,
         String lugar,
         AmbitoEvento ambito,
         String facultad,

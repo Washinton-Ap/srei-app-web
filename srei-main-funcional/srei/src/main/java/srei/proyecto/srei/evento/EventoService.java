@@ -13,6 +13,9 @@ import srei.proyecto.srei.usuario.RolNombre;
 import srei.proyecto.srei.usuario.Usuario;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -32,6 +35,7 @@ public class EventoService {
             LocalDate fecha,
             String lugar,
             AmbitoEvento ambito,
+            LocalTime hora,
             String facultad,
             String carrera,
             MultipartFile imagen,
@@ -47,13 +51,23 @@ public class EventoService {
             throw new IllegalArgumentException("Debe indicar carrera");
         }
 
-        String rutaImg = fileStorageService.guardar(imagen, "evento_img");
-        String rutaPdf = fileStorageService.guardar(informePdf, "evento_informe");
+        String rutaImg = null;
+        String rutaPdf= null;
+        try {
+            rutaImg = fileStorageService.subirArchivo(imagen, "evento_img");
+            rutaPdf = fileStorageService.subirArchivo(informePdf, "evento_informe");
 
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        LocalDateTime fechaHora = LocalDateTime.of(fecha,hora);
+       
         Evento e = Evento.builder()
                 .titulo(titulo)
                 .descripcion(descripcion)
-                .fecha(fecha)
+                .fecha(fechaHora)
                 .lugar(lugar)
                 .ambito(ambito)
                 .facultad(facultad)
@@ -82,6 +96,7 @@ public class EventoService {
             LocalDate fecha,
             String lugar,
             AmbitoEvento ambito,
+            LocalTime hora,
             String facultad,
             String carrera,
             MultipartFile imagen,
@@ -104,10 +119,11 @@ public class EventoService {
         if (ambito == AmbitoEvento.CARRERA && (carrera == null || carrera.isBlank())) {
             throw new IllegalArgumentException("Debe indicar carrera");
         }
+        LocalDateTime fechaHora = LocalDateTime.of(fecha,hora);
 
         e.setTitulo(titulo);
         e.setDescripcion(descripcion);
-        e.setFecha(fecha);
+        e.setFecha(fechaHora);
         e.setLugar(lugar);
         e.setAmbito(ambito);
         e.setFacultad(facultad);
