@@ -66,11 +66,12 @@ export class EventoService {
     fd.append('fecha', form.fecha);
     fd.append('lugar', form.lugar);
     fd.append('ambito', form.ambito);
-     fd.append('hora', form.hora);
+    fd.append('hora', form.hora);
     if (form.facultad) fd.append('facultad', form.facultad);
     if (form.carrera) fd.append('carrera', form.carrera);
     if (form.imagen) fd.append('imagen', form.imagen);
     if (form.informePdf) fd.append('informePdf', form.informePdf);
+
 
     return this.http.post<EventoDto>(this.apiUrl + '/eventos', fd);
   }
@@ -88,7 +89,7 @@ export class EventoService {
       fecha: string;
       lugar: string;
       ambito: 'FACULTAD' | 'CARRERA';
-      hora:string;
+      hora: string;
       facultad?: string;
       carrera?: string;
       imagen?: File | null;
@@ -101,9 +102,10 @@ export class EventoService {
     fd.append('fecha', form.fecha);
     fd.append('lugar', form.lugar);
     fd.append('ambito', form.ambito);
+    fd.append('hora', form.hora);
     if (form.facultad) fd.append('facultad', form.facultad);
     if (form.carrera) fd.append('carrera', form.carrera);
-    if (form.imagen) fd.append('imagen', form.imagen);
+    if (form.imagen) fd.append('imagen', form.imagen,);
     if (form.informePdf) fd.append('informePdf', form.informePdf);
     return this.http.put<EventoDto>(this.apiUrl + `/eventos/${id}/reenviar`, fd);
   }
@@ -113,6 +115,7 @@ export class EventoService {
   }
 
   generarImagenIA(prompt: string) {
-    return this.http.post(this.apiUrl+'/ia/generar-imagen', { prompt });
+    return this.http.post(this.apiUrl + '/ia/generar-imagen', { prompt });
   }
+  
 }

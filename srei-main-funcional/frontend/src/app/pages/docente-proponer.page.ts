@@ -173,6 +173,7 @@ export class DocenteProponerPage {
   modalIA = false;
 
   modoImagen: 'SUBIR' | 'IA' = 'SUBIR';
+  
   // fin variable IA
   titulo = '';
   descripcion = '';
@@ -371,8 +372,11 @@ export class DocenteProponerPage {
           this.carreras = [];
 
           this.imagen = null;
+          this.previewIA=null
           this.informePdf = null;
+          this.cd.detectChanges();
         },
+        
 
         error: () => {
           this.Alertmensaje(5, 'No se pudo registrar el evento');
@@ -392,7 +396,9 @@ export class DocenteProponerPage {
     this.eventoService.generarImagenIA(this.promptIA).subscribe({
       next: (data: any) => {
         this.previewIA = data.url;
-        console.log('Imagen con IA' + data.url);
+
+        //console.log('Imagen con IA' + data.url);
+
         this.alertService.close();
         this.alertService.success('Imagen generada con exito');
         /*
@@ -416,7 +422,12 @@ export class DocenteProponerPage {
         const blob = new Blob([byteArray], { type: 'image/png' });
 
         this.imagen = new File([blob], 'evento.png', { type: 'image/png' });
-        console.log("imagen_generada"+this.imagen);
+        /* Probando si se generaban bien la imagen con IA
+        console.log(this.imagen instanceof File); // debe ser true
+        console.log(this.imagen.name);
+        console.log(this.imagen.type);
+        console.log(this.imagen.size);
+        */
         this.cd.detectChanges();
       },
 
