@@ -9,6 +9,7 @@ import { AsistenciaService, QrDto } from '../core/services/asistencia.service';
 import { TriviaService, PreguntaDto, RankingItemDto } from '../core/services/trivia.service';
 import { ChangeDetectorRef } from '@angular/core'; // para forzarlo que funcione con un solo click
 import { RouterLink } from '@angular/router';
+import { AlertService } from '../core/services/alert.service';
 
 @Component({
   standalone: true,
@@ -71,7 +72,7 @@ import { RouterLink } from '@angular/router';
               <a
                 class="btn btn-oscuro"
                 *ngIf="evento.rutaInformePdf && (esDecano || esCoordinador || esAdmin)"
-                [href]="imagenPublicaUrl ? this.apiFileUrl(evento.rutaInformePdf) : '/uteq.png'"
+                [href]="imagenPublicaUrl ? this.apiFileUrl(evento.rutaInformePdf) :this.apiFileUrl('uploads/uteq.png')"
                 (error)="onImgError($event)"
                 target="_blank"
               >
@@ -82,7 +83,7 @@ import { RouterLink } from '@angular/router';
               <a
                 *ngIf="imagenPublicaUrl"
                 class="btn btn-naranja"
-                [href]="imagenPublicaUrl ? imagenPublicaUrl : '/uteq.png'"
+                [href]="imagenPublicaUrl ? imagenPublicaUrl : this.apiFileUrl('uploads/uteq.png')"
                 (error)="onImgError($event)"
                 target="_blank"
               >
@@ -193,7 +194,7 @@ import { RouterLink } from '@angular/router';
               >
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <div style="font-weight:600;">{{ c.autorCorreo }}</div>
-                  <button class="btn" *ngIf="esAdmin" (click)="censurar(c)">
+                  <button class="btn btn-oscuro" *ngIf="esAdmin" (click)="censurar(c)">
                     <span class="material-icons">block</span>
                     {{ c.censurado ? 'Restaurar' : 'Censurar' }}
                   </button>
@@ -232,7 +233,7 @@ import { RouterLink } from '@angular/router';
 })
 export class EventoDetallePage {
   evento: EventoDto | null = null;
-  cargando = true;
+  cargando = false;
   errorCarga = '';
   comentarios: ComentarioDto[] = [];
   nuevoComentario = '';
@@ -259,6 +260,7 @@ export class EventoDetallePage {
     private asistenciaService: AsistenciaService,
     private triviaService: TriviaService,
     private cd: ChangeDetectorRef,
+        private alertService: AlertService,
   ) {
     const roles = JSON.parse(localStorage.getItem('roles') || '[]');
     this.esAdmin = roles.includes('ADMIN');
@@ -271,15 +273,17 @@ export class EventoDetallePage {
   }
 
   private cargarDetalle(id: number) {
-    this.cargando = true;
+    //this.cargando = true;
     this.errorCarga = '';
+    this.alertService.loading();
+    setTimeout(() => {
     this.eventoService.detalle(id).subscribe({
       next: (e) => {
         this.evento = e;
-        this.cargando = false;
+        //this.cargando = false;
         // Imagen: se sirve pública desde /uploads/**
-        this.imagenPublicaUrl = e?.rutaImagen ? this.apiFileUrl(e.rutaImagen) :  this.apiFileUrl('/uteq.png');
-
+        this.imagenPublicaUrl = e?.rutaImagen ? this.apiFileUrl(e.rutaImagen) :  this.apiFileUrl('uploads/uteq.png');
+        this.alertService.close();
         this.cd.detectChanges(); // fuerza actualización de la vista
 
         this.cargarComentarios();
@@ -288,11 +292,15 @@ export class EventoDetallePage {
       error: (err) => {
         this.cargando = false;
         const msg = err?.error?.message || err?.error?.error || err?.message;
+        /*
         this.errorCarga = msg
           ? String(msg)
           : `No se pudo cargar el evento (HTTP ${err?.status || '???'}).`;
+        */
+          this.alertService.close();
+           this.alertService.error(`No se pudo cargar el evento (HTTP ${err?.status || '???'}).`);
       },
-    });
+    });}, 1000);
   }
 
   cargarComentarios() {
@@ -331,18 +339,27 @@ export class EventoDetallePage {
 
   confirmarAsistencia() {
     if (!this.evento) return;
+    this.alertService.loading
     this.mensajeAsistencia = '';
     this.asistenciaService.confirmarEvento(this.evento.id).subscribe({
       next: () => {
-        this.tipoMensajeAsistencia = 'ok';
-        this.mensajeAsistencia = 'Asistencia confirmada correctamente.';
+        //this.tipoMensajeAsistencia = 'ok';
+        //this.mensajeAsistencia = 'Asistencia confirmada correctamente.';
+        this.alertService.close();
+        this.alertService.success("Asistencia confirmada correctamente.");
+
       },
       error: (e) => {
         this.tipoMensajeAsistencia = 'error';
         const msg = e?.error?.message || e?.error?.error || e?.message;
+        /*
         this.mensajeAsistencia = msg
           ? String(msg)
           : `No se pudo confirmar la asistencia (HTTP ${e?.status || '???'}).`;
+          this.alertService.close();
+        */
+          this.alertService.close();
+          this.alertService.error("`No se pudo confirmar la asistencia.");
       },
     });
   }
